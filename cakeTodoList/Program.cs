@@ -6,7 +6,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. 新增 CORS 服務設定 ---
+// 1. 註冊 CORS 服務
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -27,16 +27,15 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// --- 重要修正 A：CORS 必須放在所有 Map 動作之前 ---
+// --- 關鍵順序 1：CORS 必須放在最前面 ---
 app.UseCors("AllowAll");
 
-// --- 重要修正 B：明確指定 Scalar 的 Server 網址 ---
+// --- 關鍵順序 2：啟用 API 文件 ---
 app.MapOpenApi();
 app.MapScalarApiReference(options => {
     options.WithTitle("我的 API 文件")
-           .WithTheme(ScalarTheme.Moon)
-           // 這裡強制讓 Scalar 知道 API 在哪，避免它去連 localhost
-           .WithServers([new ScalarServer("https://caketodolist.zeabur.app")]); 
+           .WithTheme(ScalarTheme.Moon);
+    // 移除會報錯的 .WithServers(...)
 });
 
 // app.UseHttpsRedirection(); // 保持註解
