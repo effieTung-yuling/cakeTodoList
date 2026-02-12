@@ -20,16 +20,23 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
+//{
+//    app.MapOpenApi();
+//    app.MapScalarApiReference(options =>
+//    {
+//        options.WithTitle("我的 API 文件")
+//               .WithTheme(ScalarTheme.Moon);
+//    });
+//}
+// 無論是在本機還是 Zeabur，都啟用 OpenAPI 和 Scalar
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("我的 API 文件")
-               .WithTheme(ScalarTheme.Moon);
-    });
-}
-
+    options.WithTitle("我的 API 文件")
+           .WithTheme(ScalarTheme.Moon)
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient); // 選配：設定預設客戶端
+});
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
