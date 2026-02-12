@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 COPY . .
 WORKDIR /app/src/cakeTodoList
-RUN dotnet restore
-RUN dotnet publish -c Release -o out
+RUN dotnet restore cakeTodoList/cakeTodoList.csproj
+RUN dotnet publish cakeTodoList/cakeTodoList.csproj -c Release -o out
 
 # 執行階段
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
