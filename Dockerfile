@@ -2,6 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 COPY . .
+RUN ls -R
 WORKDIR /app/src/cakeTodoList
 RUN dotnet restore cakeTodoList/cakeTodoList.csproj
 RUN dotnet publish cakeTodoList/cakeTodoList.csproj -c Release -o out
