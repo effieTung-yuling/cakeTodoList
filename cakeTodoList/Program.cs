@@ -23,7 +23,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("我的 API 文件")
+               .WithTheme(ScalarTheme.Moon);
+    });
 }
 
 app.UseHttpsRedirection();
