@@ -45,4 +45,22 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
+// --- 修正：自動建立資料表邏輯 ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // 這行會檢查資料庫，如果沒資料表會自動根據 Model 建立
+        context.Database.EnsureCreated(); 
+        Console.WriteLine("資料庫與資料表已成功確認/建立");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"建立資料庫時發生錯誤: {ex.Message}");
+    }
+}
+
+// 確保這行在最後
 app.Run("http://0.0.0.0:8080");
