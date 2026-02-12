@@ -6,7 +6,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. 註冊 CORS 服務
+// 1. 註冊 CORS 服務 (要在 builder.Build() 之前)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -35,15 +35,15 @@ app.MapOpenApi();
 app.MapScalarApiReference(options => {
     options.WithTitle("我的 API 文件")
            .WithTheme(ScalarTheme.Moon);
-    // 移除會報錯的 .WithServers(...)
+    // 這裡已移除導致編譯失敗的 .WithServers(...)
 });
 
-// app.UseHttpsRedirection(); // 保持註解
+// app.UseHttpsRedirection(); // 雲端環境請保持註解
 
 app.UseAuthorization();
 app.MapControllers();
 
-// --- 自動建立資料表邏輯 ---
+// --- 自動建立資料表邏輯 (確保 SQLite 正常) ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
