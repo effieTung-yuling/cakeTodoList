@@ -6,7 +6,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. 註冊 CORS 服務 (要在 builder.Build() 之前)
+// 1. 註冊 CORS 服務
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -17,8 +17,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=MyCakeShop.db"));
+// --- 修正點：使用 builder.Environment 而不是 app.Environment ---
+if (builder.Environment.IsDevelopment())
+{
+    // 本機開發：使用 SQLite
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlite("Data Source=dev.db"));
+}
+else
+{
+    // 雲端環境 (Zeabur)：使用 PostgreSQL
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 builder.Services.AddScoped<ProductsRepositories>();
 builder.Services.AddScoped<ProductsServices>();
@@ -27,36 +38,42 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// --- 關鍵順序 1：CORS 必須放在最前面 ---
+// --- 順序 1：CORS ---
 app.UseCors("AllowAll");
 
-// --- 關鍵順序 2：啟用 API 文件 ---
+// --- 順序 2：API 文件 ---
 app.MapOpenApi();
 app.MapScalarApiReference(options => {
     options.WithTitle("我的 API 文件")
            .WithTheme(ScalarTheme.Moon);
-    // 這裡已移除導致編譯失敗的 .WithServers(...)
 });
-
-// app.UseHttpsRedirection(); // 雲端環境請保持註解
 
 app.UseAuthorization();
 app.MapControllers();
 
-// --- 自動建立資料表邏輯 (確保 SQLite 正常) ---
+// 自動建立資料表
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated(); 
-        Console.WriteLine("資料庫與資料表已成功確認/建立");
+        context.Database.EnsureCreated();
+        // 這裡的小優化：根據環境顯示不同的 Log
+        string dbType = app.Environment.IsDevelopment() ? "SQLite" : "PostgreSQL";
+        Console.WriteLine($"{dbType} 資料表已成功確認/建立");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"建立資料庫時發生錯誤: {ex.Message}");
+        Console.WriteLine($"資料庫初始化失敗: {ex.Message}");
     }
 }
 
-app.Run("http://0.0.0.0:8080");
+if (app.Environment.IsDevelopment())
+{
+    app.Run(); // 本機會自動抓 launchSettings.json 裡的 Port (通常是 5xxx)
+}
+else
+{
+    app.Run("http://0.0.0.0:8080"); // 雲端用 8080
+}
