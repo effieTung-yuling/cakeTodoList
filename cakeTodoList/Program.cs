@@ -17,18 +17,20 @@ builder.Services.AddCors(options =>
     });
 });
 
-// --- 修正點：使用 builder.Environment 而不是 app.Environment ---
-if (builder.Environment.IsDevelopment())
+// 取得連線字串
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
 {
-    // 本機開發：使用 SQLite
+    // 如果抓不到連線字串（代表是在本機），才用 SQLite
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite("Data Source=dev.db"));
 }
 else
 {
-    // 雲端環境 (Zeabur)：使用 PostgreSQL
+    // 只要有連線字串（代表在 Zeabur 且變數設定正確），就用 PostgreSQL
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseNpgsql(connectionString));
 }
 
 builder.Services.AddScoped<ProductsRepositories>();

@@ -48,7 +48,7 @@ namespace cakeTodoList.Controllers
                 Price = request.Price,
                 IsSale = true,        // 記得也要把 IsSale 傳過去
                 Description = request.Description,
-                CreatedAt = DateTime.Now        // 可以在這裡設定初始時間
+                CreatedAt = DateTime.UtcNow        // 可以在這裡設定初始時間
             };
 
             try
