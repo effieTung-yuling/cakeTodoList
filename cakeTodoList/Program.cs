@@ -58,14 +58,24 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated();
-        // 這裡的小優化：根據環境顯示不同的 Log
-        string dbType = app.Environment.IsDevelopment() ? "SQLite" : "PostgreSQL";
-        Console.WriteLine($"{dbType} 資料表已成功確認/建立");
+        // 加一行測試連線
+        var canConnect = context.Database.CanConnect();
+        if (canConnect)
+        {
+            context.Database.EnsureCreated();
+            Console.WriteLine("✅ 資料庫連線與初始化成功！");
+        }
+        else
+        {
+            Console.WriteLine("❌ 無法連線到資料庫，請檢查連線字串。");
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"資料庫初始化失敗: {ex.Message}");
+        // 這一行非常重要，會告訴我們具體錯在哪
+        Console.WriteLine($"🔥 啟動錯誤: {ex.Message}");
+        if (ex.InnerException != null)
+            Console.WriteLine($"🔥 詳細原因: {ex.InnerException.Message}");
     }
 }
 
